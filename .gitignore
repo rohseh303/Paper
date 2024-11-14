@@ -1,0 +1,6 @@
+   # Ignore Python virtual environments
+   venv/
+   server/venv/
+   __pycache__/
+   server/__pycache__/
+   *.pyc

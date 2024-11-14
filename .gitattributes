@@ -1,0 +1,12 @@
+server/venv/lib/python3.11/site-packages/pip/_internal/operations/freeze.py filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/greenlet/tests/__pycache__/fail_initialstub_already_started.cpython-311.pyc filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/bson/__pycache__/regex.cpython-311.pyc filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/pip/_vendor/rich/syntax.py filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/engineio/async_server.py filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/setuptools/dist.py filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/h11/_util.py filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/pip/_vendor/packaging/__pycache__/_manylinux.cpython-311.pyc filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/eventlet/green/subprocess.py filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/dns/__pycache__/tsigkeyring.cpython-311.pyc filter=lfs diff=lfs merge=lfs -text
+*.pyc filter=lfs diff=lfs merge=lfs -text
+server/venv/lib/python3.11/site-packages/* filter=lfs diff=lfs merge=lfs -text

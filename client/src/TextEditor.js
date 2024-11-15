@@ -35,6 +35,7 @@ export default function TextEditor() {
     if (socket == null || quill == null) return
 
     socket.once("load-document", document => {
+      console.log("Document loaded:", document)
       quill.setContents(document)
       quill.enable()
     })
@@ -46,13 +47,13 @@ export default function TextEditor() {
     if (socket == null || quill == null) return
 
     const interval = setInterval(() => {
-      socket.emit("save-document", quill.getContents())
+      socket.emit("save-document", quill.getContents(), documentId)
     }, SAVE_INTERVAL_MS)
 
     return () => {
       clearInterval(interval)
     }
-  }, [socket, quill])
+  }, [socket, quill, documentId])
 
   useEffect(() => {
     if (socket == null || quill == null) return
@@ -72,14 +73,14 @@ export default function TextEditor() {
 
     const handler = (delta, oldDelta, source) => {
       if (source !== "user") return
-      socket.emit("send-changes", delta)
+      socket.emit("send-changes", delta, documentId)
     }
     quill.on("text-change", handler)
 
     return () => {
       quill.off("text-change", handler)
     }
-  }, [socket, quill])
+  }, [socket, quill, documentId])
 
   const wrapperRef = useCallback(wrapper => {
     if (wrapper == null) return

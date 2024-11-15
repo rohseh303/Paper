@@ -20,9 +20,12 @@ def find_or_create_document(document_id):
     if document_id is None:
         return None
     document = Document.objects(_id=document_id).first()
+    print("Creating document")
     if document:
+        print("Document found/successfully created")
         return document
     else:
+        print("Document not found/successfully created")
         return Document(_id=document_id, data=default_value).save()
 
 # Handle socket connection and events
@@ -32,22 +35,48 @@ def handle_connect():
 
 @socketio.on("get-document")
 def handle_get_document(document_id):
+    print("Document ID:", document_id)
     document = find_or_create_document(document_id)
     join_room(document_id)
+    print("room:", request.sid)
     emit("load-document", document.data, room=request.sid)
 
 @socketio.on("send-changes")
-def handle_send_changes(data):
-    document_id, delta = data['document_id'], data['delta']
-    emit("receive-changes", delta, room=document_id, include_self=False)
+def handle_send_changes(data, document_id):
+    print("Sending changes:", data, document_id)
+    
+    # Extract the delta from the incoming data
+    delta = data['ops']  # This is the structure you provided
+
+    # Convert `delta` to a single text string if needed
+    # Assuming `delta` is in the format of Quill's Delta
+    content = "".join([op.get('insert', '') for op in delta if 'insert' in op])
+    
+    # Update the document in MongoDB
+    print("Updating document:", content)
+    Document.objects(_id=document_id).update_one(set__data=content)
+    
+    # Emit the changes to the room
+    emit("receive-changes", data, room=document_id, include_self=False)
 
 @socketio.on("save-document")
-def handle_save_document(data):
-    print("Saving document: ", data)
-    document_id, content = data['document_id'], data['content']
-    print(document_id, content)
-    Document.objects(_id=document_id).update(data=content)
+def handle_save_document(data, document_id):
+    print("Saving document:", data, document_id)
+    
+    # Check for `document_id` and `ops` keys in the received data
+    if not document_id not in data or 'ops' not in data:
+        print("Error: Missing 'document_id' or 'ops' in data.")
+        return
+
+    ops = data['ops']
+    
+    # Convert `ops` to a single text string if needed
+    content = "".join([op.get('insert', '') for op in ops if 'insert' in op])
+    
+    print(f"Document ID: {document_id}, Content: {content}")
+    
+    # Update the document in MongoDB
+    Document.objects(_id=document_id).update(data={"content": content})
 
 if __name__ == "__main__":
-    print("Server is running on port 3001")
     socketio.run(app, host="0.0.0.0", port=3001)

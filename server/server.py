@@ -3,8 +3,8 @@ eventlet.monkey_patch()
 
 from flask import Flask, request
 from flask_socketio import SocketIO, join_room, emit
-from mongoengine import connect
-from Document import Document  # Adjust this import based on your file structure
+from mongoengine import connect, StringField
+from Document import Document
 
 app = Flask(__name__)
 
@@ -20,12 +20,11 @@ def find_or_create_document(document_id):
     if document_id is None:
         return None
     document = Document.objects(_id=document_id).first()
-    print("Creating document")
     if document:
-        print("Document found/successfully created")
+        print("Document found: ", document.data)
         return document
     else:
-        print("Document not found/successfully created")
+        print("Document not found, creating new document")
         return Document(_id=document_id, data=default_value).save()
 
 # Handle socket connection and events
@@ -37,6 +36,7 @@ def handle_connect():
 def handle_get_document(document_id):
     print("Document ID:", document_id)
     document = find_or_create_document(document_id)
+    print("Document: ", document.data)
     join_room(document_id)
     print("room:", request.sid)
     emit("load-document", document.data, room=request.sid)
@@ -61,22 +61,22 @@ def handle_send_changes(data, document_id):
 
 @socketio.on("save-document")
 def handle_save_document(data, document_id):
-    print("Saving document:", data, document_id)
-    
     # Check for `document_id` and `ops` keys in the received data
     if not document_id not in data or 'ops' not in data:
         print("Error: Missing 'document_id' or 'ops' in data.")
         return
 
-    ops = data['ops']
-    
     # Convert `ops` to a single text string if needed
-    content = "".join([op.get('insert', '') for op in ops if 'insert' in op])
-    
-    print(f"Document ID: {document_id}, Content: {content}")
-    
-    # Update the document in MongoDB
-    Document.objects(_id=document_id).update(data={"content": content})
+    ops = data['ops']
+    content = "".join([op.get('insert', '') for op in ops if 'insert' in op]).strip()
+
+    if not content:
+        print(f"Ignoring save for document ID: {document_id} due to empty content.")
+        return
+
+    # Update the document in MongoDB with the Delta
+    print("Saving document:", data, document_id)
+    Document.objects(_id=document_id).update_one(set__data={"ops": ops})
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=3001)

@@ -6,6 +6,9 @@ from flask_socketio import SocketIO, join_room, emit
 from mongoengine import connect, StringField
 from Document import Document
 import openai
+from dotenv import load_dotenv
+from openai import OpenAI
+import os
 
 app = Flask(__name__)
 
@@ -16,8 +19,10 @@ socketio = SocketIO(app, cors_allowed_origins="http://localhost:3000")
 
 default_value = {}
 
-# Set your OpenAI API key
-openai.api_key = 'your-openai-api-key'
+# Load environment variables from .env file
+load_dotenv()
+openai.api_key = os.getenv('OPENAI_API_KEY')
+client = OpenAI()
 
 # Helper function to find or create a document
 def find_or_create_document(document_id):
@@ -76,7 +81,7 @@ def handle_text_selection(data):
     document_id = data.get('documentId')
     selected_text = data.get('text')
     desired_changes = data.get('changes', '')
-    
+
     if not document_id or not selected_text:
         return
 
@@ -86,13 +91,17 @@ def handle_text_selection(data):
         prompt += f" The user wants to see these changes: '{desired_changes}'."
     prompt += " Please provide the updated text."
 
-    response = openai.Completion.create(
-        engine="text-davinci-003",  # You can choose a different engine if needed
-        prompt=prompt,
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
         max_tokens=150
     )
-    
-    suggestions = response.choices[0].text.strip()
+
+    suggestions = response.choices[0].message.content.strip()
+    print("Suggestions:", suggestions)
 
     # Emit the suggestions back to the client
     emit("text-suggestion", {"suggestions": suggestions}, room=document_id)

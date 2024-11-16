@@ -34,10 +34,17 @@ def find_or_create_document(document_id):
     else:
         return Document(_id=document_id, data=default_value).save()
 
+# Helper function to get all document IDs
+def get_all_document_ids():
+    return [doc._id for doc in Document.objects.only('_id')]  # Fetch only the IDs
+
 # Handle socket connection and events
 @socketio.on("connect")
 def handle_connect():
     print("Client connected")
+    # Emit the list of document IDs to the client upon connection
+    document_ids = get_all_document_ids()
+    emit("document-list", document_ids)
 
 @socketio.on("get-document")
 def handle_get_document(document_id):

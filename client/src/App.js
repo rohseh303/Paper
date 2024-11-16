@@ -5,17 +5,20 @@ import {
   Route,
   Redirect,
 } from "react-router-dom"
-import { v4 as uuidV4 } from "uuid"
+import HomePage from "./HomePage"
 
 function App() {
   return (
     <Router>
       <Switch>
         <Route path="/" exact>
-          <Redirect to={`/documents/${uuidV4()}`} />
+          <Redirect to="/documents" />
         </Route>
         <Route path="/documents/:id">
           <TextEditor />
+        </Route>
+        <Route path="/documents">
+          <HomePage />
         </Route>
       </Switch>
     </Router>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import Quill from "quill"
 import "quill/dist/quill.snow.css"
 import { io } from "socket.io-client"
@@ -21,6 +21,9 @@ export default function TextEditor() {
   const { id: documentId } = useParams()
   const [socket, setSocket] = useState()
   const [quill, setQuill] = useState()
+  const [showPopup, setShowPopup] = useState(false)
+  const [selectedText, setSelectedText] = useState("")
+  const [desiredChange, setDesiredChange] = useState("")
 
   useEffect(() => {
     const s = io("http://localhost:3001")
@@ -82,6 +85,39 @@ export default function TextEditor() {
     }
   }, [socket, quill, documentId])
 
+  useEffect(() => {
+    if (quill == null) return
+
+    const handleSelectionChange = (range, oldRange, source) => {
+      console.log("Selection changed:", range, oldRange, source)
+      
+      if (showPopup) return
+
+      if (source !== "user" || range == null || range.length === 0) {
+        setShowPopup(false)
+        return
+      }
+
+      const text = quill.getText(range.index, range.length)
+      console.log("Selected text:", text)
+      setSelectedText(text)
+      setShowPopup(true)
+    }
+
+    quill.on("selection-change", handleSelectionChange)
+
+    return () => {
+      quill.off("selection-change", handleSelectionChange)
+    }
+  }, [quill, showPopup])
+
+  const handleSubmit = () => {
+    // Send the selected text and desired change to the server
+    socket.emit("text-selection", { text: selectedText, changes: desiredChange, documentId })
+    setShowPopup(false)
+    setDesiredChange("")
+  }
+
   const wrapperRef = useCallback(wrapper => {
     if (wrapper == null) return
 
@@ -96,5 +132,21 @@ export default function TextEditor() {
     q.setText("Loading...")
     setQuill(q)
   }, [])
-  return <div className="container" ref={wrapperRef}></div>
+
+  return (
+    <div className="container" ref={wrapperRef}>
+      {showPopup && (
+        <div className="popup">
+          <h3>Enter Desired Change</h3>
+          <textarea
+            value={desiredChange}
+            onChange={(e) => setDesiredChange(e.target.value)}
+            placeholder="Describe the changes you'd like to see..."
+          />
+          <button onClick={handleSubmit}>Submit</button>
+          <button onClick={() => setShowPopup(false)}>Cancel</button>
+        </div>
+      )}
+    </div>
+  )
 }

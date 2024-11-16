@@ -3,6 +3,7 @@ import Quill from "quill"
 import "quill/dist/quill.snow.css"
 import { io } from "socket.io-client"
 import { useParams } from "react-router-dom"
+import PopUp from "./PopUp"
 
 const SAVE_INTERVAL_MS = 2000
 const TOOLBAR_OPTIONS = [
@@ -21,9 +22,11 @@ export default function TextEditor() {
   const { id: documentId } = useParams()
   const [socket, setSocket] = useState()
   const [quill, setQuill] = useState()
+
   const [showPopup, setShowPopup] = useState(false)
+
   const [selectedText, setSelectedText] = useState("")
-  const [desiredChange, setDesiredChange] = useState("")
+  const [suggestions, setSuggestions] = useState("")
 
   useEffect(() => {
     const s = io("http://localhost:3001")
@@ -34,6 +37,7 @@ export default function TextEditor() {
     }
   }, [])
 
+  // loading the document from the server
   useEffect(() => {
     if (socket == null || quill == null) return
 
@@ -46,6 +50,7 @@ export default function TextEditor() {
     socket.emit("get-document", documentId)
   }, [socket, quill, documentId])
 
+  // saving the document to the server
   useEffect(() => {
     if (socket == null || quill == null) return
 
@@ -58,6 +63,7 @@ export default function TextEditor() {
     }
   }, [socket, quill, documentId])
 
+  // handling changes made by the user
   useEffect(() => {
     if (socket == null || quill == null) return
 
@@ -71,6 +77,7 @@ export default function TextEditor() {
     }
   }, [socket, quill])
 
+    // user makes changes and sends them to the server
   useEffect(() => {
     if (socket == null || quill == null) return
 
@@ -85,12 +92,11 @@ export default function TextEditor() {
     }
   }, [socket, quill, documentId])
 
+  // user highlights text and shows the popup
   useEffect(() => {
     if (quill == null) return
 
     const handleSelectionChange = (range, oldRange, source) => {
-      console.log("Selection changed:", range, oldRange, source)
-      
       if (showPopup) return
 
       if (source !== "user" || range == null || range.length === 0) {
@@ -98,9 +104,11 @@ export default function TextEditor() {
         return
       }
 
+      console.log("Selection changed:", range, oldRange, source)
       const text = quill.getText(range.index, range.length)
       console.log("Selected text:", text)
       setSelectedText(text)
+      // instead of setting text to a state variable, save the selected text to the document object
       setShowPopup(true)
     }
 
@@ -111,12 +119,20 @@ export default function TextEditor() {
     }
   }, [quill, showPopup])
 
-  const handleSubmit = () => {
-    // Send the selected text and desired change to the server
-    socket.emit("text-selection", { text: selectedText, changes: desiredChange, documentId })
-    setShowPopup(false)
-    setDesiredChange("")
-  }
+    // handling received text suggestions from the server
+    useEffect(() => {
+      if (socket == null) return
+  
+      const handler = (data) => {
+        console.log("Received suggestions:", data.suggestions)
+        setSuggestions(data.suggestions) // Update state with received suggestions
+      }
+      socket.on("text-suggestion", handler)
+  
+      return () => {
+        socket.off("text-suggestion", handler)
+      }
+    }, [socket])
 
   const wrapperRef = useCallback(wrapper => {
     if (wrapper == null) return
@@ -129,22 +145,19 @@ export default function TextEditor() {
       modules: { toolbar: TOOLBAR_OPTIONS },
     })
     q.disable()
-    q.setText("Loading...")
+    q.setText("Loading file...")
     setQuill(q)
   }, [])
 
   return (
     <div className="container" ref={wrapperRef}>
       {showPopup && (
-        <div className="popup">
-          <h3>Enter Desired Change</h3>
-          <textarea
-            value={desiredChange}
-            onChange={(e) => setDesiredChange(e.target.value)}
-            placeholder="Describe the changes you'd like to see..."
-          />
-          <button onClick={handleSubmit}>Submit</button>
-          <button onClick={() => setShowPopup(false)}>Cancel</button>
+        <PopUp showPopup={showPopup} setShowPopup={setShowPopup} socket={socket} selectedText={selectedText} documentId={documentId}/>
+      )}
+      {suggestions && (
+        <div className="suggestions">
+          <h3>Suggestions:</h3>
+          <p>{suggestions}</p>
         </div>
       )}
     </div>

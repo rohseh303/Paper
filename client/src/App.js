@@ -1,11 +1,11 @@
-import TextEditor from "./TextEditor"
+import TextEditor from "./components/TextEditor"
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Redirect,
 } from "react-router-dom"
-import HomePage from "./HomePage"
+import HomePage from "./components/HomePage"
 
 function App() {
   return (

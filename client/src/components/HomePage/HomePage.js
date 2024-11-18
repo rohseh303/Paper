@@ -29,7 +29,7 @@ function HomePage() {
 
   return (
     <div>
-      <h1>Welcome to the Paper</h1>
+      <h1>Welcome to Paper</h1>
       <button onClick={createNewDocument}>Create New Document</button>
       {documentIds.map((id) => (
         <button key={id} onClick={() => openDocument(id)}>

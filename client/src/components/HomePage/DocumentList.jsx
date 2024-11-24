@@ -1,14 +1,29 @@
 import React from 'react';
 import { File, Star, Clock, Folder } from 'lucide-react';
+import { io } from "socket.io-client";
+import { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 
-const documents = [
-  { id: 1, name: 'Project Proposal', modified: '2 days ago', starred: true },
-  { id: 2, name: 'Meeting Notes', modified: '1 week ago', starred: false },
-  { id: 3, name: 'Monthly Report', modified: 'Yesterday', starred: true },
-  { id: 4, name: 'Team Updates', modified: '3 days ago', starred: false },
-];
+const socket = io("http://localhost:3001");
 
-const DocumentList = () => {
+function DocumentList() {
+  const history = useHistory();
+  const [documentIds, setDocumentIds] = useState([]);
+
+  useEffect(() => {
+    socket.on("document-list", (ids) => {
+      setDocumentIds(ids); // Update state with the received document IDs
+    });
+
+    return () => {
+      socket.off("document-list");
+    };
+  }, []);
+
+  const openDocument = (id) => {
+    history.push(`/documents/${id}`); // Redirect to the selected document
+  };
+
   return (
     <div className="mb-12">
       <div className="flex items-center space-x-6 mb-6">
@@ -27,9 +42,10 @@ const DocumentList = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {documents.map((doc) => (
+        {documentIds.map((id) => (
           <div
-            key={doc.id}
+            key={id}
+            onClick={() => openDocument(id)}
             className="p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-500 cursor-pointer group transition-all"
           >
             <div className="aspect-w-8 aspect-h-11 bg-gray-50 rounded-lg mb-3 p-4 flex items-center justify-center">
@@ -38,13 +54,9 @@ const DocumentList = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-medium text-gray-900 group-hover:text-blue-600">
-                  {doc.name}
+                  {id}...
                 </h3>
-                <p className="text-sm text-gray-500">{doc.modified}</p>
               </div>
-              {doc.starred && (
-                <Star className="w-5 h-5 text-yellow-400 fill-current" />
-              )}
             </div>
           </div>
         ))}

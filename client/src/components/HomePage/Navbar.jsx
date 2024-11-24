@@ -1,7 +1,15 @@
 import React from 'react';
 import { Menu, Plus, Search, Settings } from 'lucide-react';
+import { useHistory } from 'react-router-dom';
+import { v4 as uuidV4 } from 'uuid';
 
 const Navbar = () => {
+  const history = useHistory();
+
+  const createNewDocument = () => {
+    history.push(`/documents/${uuidV4()}`); // Redirect to a new document with a unique ID
+  };
+
   return (
     <nav className="bg-white border-b border-gray-200">
       <div className="max-w-screen-xl mx-auto px-4">
@@ -30,7 +38,7 @@ const Navbar = () => {
             <button className="p-2 hover:bg-gray-100 rounded-full">
               <Settings className="w-6 h-6 text-gray-600" />
             </button>
-            <button className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+            <button onClick={createNewDocument} className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
               <Plus className="w-5 h-5" />
               <span>New</span>
             </button>

@@ -115,9 +115,9 @@ def handle_text_selection(data):
     # print("Suggestions:", suggestions)
 
     agent_system = FeedbackAgentSystem()
-    suggestions = agent_system.process_user_input(selected_text, desired_changes)  # Changed from .run
+    suggestions = agent_system.process_user_input(selected_text, desired_changes)
     
-    emit('feedback', {'suggestions': suggestions})
+    emit("text-suggestion", {"suggestions": suggestions}, room=document_id)
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=3001)

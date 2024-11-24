@@ -130,20 +130,21 @@ class FeedbackAgentSystem:
         # Run the agent executor
         response = self.agent_executor.invoke({"input": input_message})
         print("Agent response:", response)
+        print("Agent output:", response["output"])
         return response["output"]
 
-if __name__ == "__main__":
-    agent_system = FeedbackAgentSystem()
+# if __name__ == "__main__":
+#     agent_system = FeedbackAgentSystem()
 
-    # Test Grammar Correction
-    user_input = "She don't know nothing about it."
-    print("Original Text:", user_input)
-    response = agent_system.process_user_input(user_input)
-    print("Corrected Text:", response)
+#     # Test Grammar Correction
+#     user_input = "She don't know nothing about it."
+#     print("Original Text:", user_input)
+#     response = agent_system.process_user_input(user_input)
+#     print("Corrected Text:", response)
 
-    # Test Tone Modification
-    user_input = "Hey guys, what's up?"
-    desired_tone = "professional"
-    print("\nOriginal Text:", user_input)
-    response = agent_system.process_user_input(user_input, desired_changes=f"Change tone to {desired_tone}")
-    print("Modified Text:", response)
+#     # Test Tone Modification
+#     user_input = "Hey guys, what's up?"
+#     desired_tone = "professional"
+#     print("\nOriginal Text:", user_input)
+#     response = agent_system.process_user_input(user_input, desired_changes=f"Change tone to {desired_tone}")
+#     print("Modified Text:", response)

@@ -8,6 +8,7 @@ from Document import Document
 import openai
 from dotenv import load_dotenv
 from openai import OpenAI
+from model import FeedbackAgentSystem
 import os
 
 app = Flask(__name__)
@@ -22,6 +23,9 @@ default_value = {}
 # Load environment variables from .env file
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
+if not openai.api_key:
+    raise ValueError("OPENAI_API_KEY not found in environment variables")
+
 client = OpenAI()
 
 # Helper function to find or create a document
@@ -92,26 +96,28 @@ def handle_text_selection(data):
     if not document_id or not selected_text:
         return
 
-    # Use OpenAI's GPT to generate suggestions
-    prompt = f"Here is the text: '{selected_text}'."
-    if desired_changes:
-        prompt += f" The user wants to see these changes: '{desired_changes}'."
-    prompt += " Please provide the updated text."
+    # # Use OpenAI's GPT to generate suggestions
+    # prompt = f"Here is the text: '{selected_text}'."
+    # if desired_changes:
+    #     prompt += f" The user wants to see these changes: '{desired_changes}'."
+    # prompt += " Please provide the updated text."
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=150
-    )
+    # response = client.chat.completions.create(
+    #     model="gpt-4o-mini",
+    #     messages=[
+    #         {"role": "system", "content": "You are a helpful assistant."},
+    #         {"role": "user", "content": prompt}
+    #     ],
+    #     max_tokens=150
+    # )
 
-    suggestions = response.choices[0].message.content.strip()
-    print("Suggestions:", suggestions)
+    # suggestions = response.choices[0].message.content.strip()
+    # print("Suggestions:", suggestions)
 
-    # Emit the suggestions back to the client
-    emit("text-suggestion", {"suggestions": suggestions}, room=document_id)
+    agent_system = FeedbackAgentSystem()
+    suggestions = agent_system.process_user_input(selected_text, desired_changes)  # Changed from .run
+    
+    emit('feedback', {'suggestions': suggestions})
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=3001)

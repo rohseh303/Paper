@@ -24,6 +24,7 @@ default_value = {}
 load_dotenv()
 openai.api_key = os.getenv('OPENAI_API_KEY')
 if not openai.api_key:
+    # print("OPENAI_API_KEY not found in environment variables")
     raise ValueError("OPENAI_API_KEY not found in environment variables")
 
 client = OpenAI()
@@ -45,7 +46,7 @@ def get_all_document_ids():
 # Handle socket connection and events
 @socketio.on("connect")
 def handle_connect():
-    print("Client connected")
+    print("getting document list")
     # Emit the list of document IDs to the client upon connection
     document_ids = get_all_document_ids()
     emit("document-list", document_ids)
@@ -118,6 +119,11 @@ def handle_text_selection(data):
     suggestions = agent_system.process_user_input(selected_text, desired_changes)
     
     emit("text-suggestion", {"suggestions": suggestions}, room=document_id)
+
+@socketio.on("request-document-list")
+def handle_request_document_list():
+    document_ids = get_all_document_ids()
+    emit("document-list", document_ids)
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=3001)

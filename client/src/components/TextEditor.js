@@ -41,13 +41,17 @@ export default function TextEditor() {
   useEffect(() => {
     if (socket == null || quill == null) return
 
-    socket.once("load-document", document => {
+    socket.on("load-document", document => {
       console.log("Document loaded:", document)
       quill.setContents(document)
       quill.enable()
     })
 
     socket.emit("get-document", documentId)
+
+    return () => {
+      socket.off("load-document")
+    }
   }, [socket, quill, documentId])
 
   // saving the document to the server

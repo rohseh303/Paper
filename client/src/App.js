@@ -11,14 +11,16 @@ function App() {
   return (
     <Router>
       <Switch>
-        <Route path="/" exact>
+        <Route path="/documents/:id" render={({ match }) => {
+          debugger;
+          return <TextEditor />;
+        }} />
+        <Route path="/documents" render={({ location }) => {
+          debugger;
+          return <HomePage />;
+        }} />
+        <Route path="*">
           <Redirect to="/documents" />
-        </Route>
-        <Route path="/documents/:id">
-          <TextEditor />
-        </Route>
-        <Route path="/documents">
-          <HomePage />
         </Route>
       </Switch>
     </Router>

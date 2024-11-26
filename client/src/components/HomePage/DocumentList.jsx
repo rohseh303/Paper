@@ -7,22 +7,32 @@ import { useHistory } from 'react-router-dom';
 const socket = io("http://localhost:3001");
 
 function DocumentList() {
+  debugger;
   const history = useHistory();
   const [documentIds, setDocumentIds] = useState([]);
 
+  const refreshDocuments = () => {
+    socket.emit("request-document-list");
+  };
+
   useEffect(() => {
     socket.on("document-list", (ids) => {
-      setDocumentIds(ids); // Update state with the received document IDs
+      setDocumentIds(ids);
     });
+
+    // Initial request when component mounts
+    refreshDocuments();
 
     return () => {
       socket.off("document-list");
     };
   }, []);
+  debugger;
 
   const openDocument = (id) => {
     history.push(`/documents/${id}`); // Redirect to the selected document
   };
+  debugger;
 
   return (
     <div className="mb-12">
